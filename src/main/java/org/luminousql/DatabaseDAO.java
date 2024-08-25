@@ -7,8 +7,8 @@ import java.util.List;
 public class DatabaseDAO {
 
     // Database credentials
-    static String url = "jdbc:postgresql://localhost:5432/";
-    static String user = "postgres";
+    static String url = "";
+    static String user = "";
     static String password = "";
 
     public static List<String> getAllTableNames() {
