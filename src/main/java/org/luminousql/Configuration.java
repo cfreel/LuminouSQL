@@ -1,5 +1,6 @@
 package org.luminousql;
 
+import javax.crypto.SecretKey;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +13,11 @@ public class Configuration {
     private static final Map<String, String> configMap = new HashMap<>();
     // Map to store comments and their line numbers
     private static final Map<String,Integer> configLocationMap = new HashMap<>(1000);
+
+    private static final String ENC_KEY_FIXED_PART = "EncKeyFixedPart";
+    private static final String PASSCODE_VALIDATION_LABEL = "PassVal";
+    private static final String PASSCODE_VALIDATION_TEXT = "TheQuickBrownFox";
+
     static List<ConfiguredDriver> configuredDrivers = new ArrayList<>();
     static List<Alias> aliases = new ArrayList<>();
 
@@ -20,6 +26,7 @@ public class Configuration {
     static String currentQuery;
     static List<String> columns;
     static List<List<String>> queryResults;
+    static String fixedPortionEncKey;
 
     public static void readConfig(String configFile) throws IOException {
         configFilePath = configFile;
@@ -30,12 +37,12 @@ public class Configuration {
             while ((line = reader.readLine()) != null) {
                 configFileText.add(line);
 
-                String[] parts = line.split("=");
-                if (parts.length != 2) {
+                int pos = line.indexOf('=');
+                if (pos <0) {
                     throw new IllegalArgumentException("Invalid configuration format: " + line);
                 }
-                String key = parts[0].trim();
-                String value = parts[1].trim();
+                String key = line.substring(0, pos).trim();
+                String value = line.substring(pos+1).trim();
                 configMap.put(key, value);
                 configLocationMap.put(key, lineNumber);
                 lineNumber++;
@@ -51,6 +58,33 @@ public class Configuration {
         }
         loadDrivers();
         loadAliases();
+    }
+
+    public static boolean passcodeExists() {
+        String encrypted = getConfig(PASSCODE_VALIDATION_LABEL);
+        return encrypted != null;
+    }
+
+    public static boolean passcodeIsValid(String passcode) throws Exception {
+        String encrypted = getConfig(PASSCODE_VALIDATION_LABEL);
+        if (encrypted != null) {
+            String encKeyFixedPart = getConfig(ENC_KEY_FIXED_PART);
+            SecretKey key = EncryptionUtil.getKey(passcode, encKeyFixedPart);
+            EncryptedStringBundle encBundle = new EncryptedStringBundle(encrypted);
+            String decryptedFromPasscode = EncryptionUtil.decrypt(key, encBundle);
+            return PASSCODE_VALIDATION_TEXT.equals(decryptedFromPasscode);
+        }
+        return false;
+    }
+
+    public static void setPasscodeInConfig(String passcode) throws Exception {
+        // get a random key for the fixed part (acts a bit like a salt), intended for the first time only:
+        String salt = EncryptionUtil.getSalt();
+        addConfig(ENC_KEY_FIXED_PART, salt);
+        SecretKey key = EncryptionUtil.getKey(passcode, salt);
+        EncryptedStringBundle encryptedStringBundle = EncryptionUtil.encrypt(key, PASSCODE_VALIDATION_TEXT);
+        addConfig(PASSCODE_VALIDATION_LABEL, encryptedStringBundle.toString());
+        writeConfig();
     }
 
     public static void loadAliases() {
@@ -218,11 +252,10 @@ public class Configuration {
     }
 
     static Alias getAliasFromName(String aliasName) {
-        Alias alias = aliases.stream().
+        return aliases.stream().
                 filter(e->e.name.equals(aliasName)).
                 findFirst().
                 orElse(null);
-        return alias;
     }
 
     static ConfiguredDriver getConfiguredDriverFromAlias(Alias alias) {

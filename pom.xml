@@ -53,5 +53,11 @@
             <artifactId>lanterna</artifactId>
             <version>3.2.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.9.1</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

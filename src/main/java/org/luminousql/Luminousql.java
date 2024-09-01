@@ -7,9 +7,10 @@ import java.util.concurrent.Executors;
 
 public class Luminousql {
 
-    private static String APP_NAME = "LuminouSQL";
+    private static final String APP_NAME = "LuminouSQL";
 
     public static Map<String,String> configMap;
+
 
     public static void main(String[] args) {
 

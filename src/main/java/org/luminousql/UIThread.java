@@ -16,16 +16,16 @@ import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UIThread implements Runnable {
-    static ComboBox<String> comboBox;
     static List<String> tableNames = new ArrayList<>();
     static Table<String> table;
     static MenuItem pullDataMenuItem;
+
+    private static final String FAILED_PASSCODE_MSG = "Incorrect passcode";
+    private static final String OTHER_PASSCODE_ERROR = "Error processing passcode";
 
     public void run() {
         DefaultTerminalFactory terminalFactory = new DefaultTerminalFactory();
@@ -74,6 +74,18 @@ public class UIThread implements Runnable {
             contentPanel.addComponent(bottomPanel, BorderLayout.Location.BOTTOM);
 
             window.setComponent(contentPanel);
+
+            TerminalSize dialogSize = new TerminalSize(screen.getTerminalSize().getColumns()/2,
+                    screen.getTerminalSize().getRows()/2);
+
+            if (!Configuration.passcodeExists()) {
+                // create passcode dialog
+                new CreatePasscodeDialogBuilder(dialogSize, textGUI).build().showDialog(textGUI);
+            } else {
+                // get & check passcode dialog
+                new GetPasscodeDialogBuilder(dialogSize, textGUI).buildDialog().showDialog(textGUI);
+            }
+
             textGUI.addWindowAndWait(window);
         } catch (IOException e) {
             e.printStackTrace();
@@ -207,46 +219,6 @@ public class UIThread implements Runnable {
         panel.addComponent(menubar);
     }
 
-
-    private static void addFileLoadToPanel(Panel contentPanel, WindowBasedTextGUI textGUI) {
-        contentPanel.addComponent(new Button("Choose File", new Runnable() {
-            @Override
-            public void run() {
-                File file = new FileDialogBuilder()
-                        .setTitle("Open File")
-                        .setDescription("Choose a file")
-                        .setActionLabel("Open")
-                        .build()
-                        .showDialog(textGUI);
-                if (file != null) {
-                    System.out.println("File deets:" + file.getAbsolutePath() + ", " + file.getPath() + ", " +
-                            file.getName());
-                    try {
-                        TableModel<String> tableModel = null;
-                        List<String> lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
-                        int numCols = 0;
-                        for (String line : lines) {
-                            String[] fields = line.split(",");
-                            if (fields.length > numCols)
-                                numCols = fields.length;
-                            if (tableModel == null)
-                                tableModel = new TableModel<>(fields);
-                            else
-                                tableModel.addRow(fields);
-                        }
-                        table.setTableModel(tableModel);
-                    } catch (IOException e) {
-                        System.err.println(e.getMessage());
-                    }
-
-                } else {
-                    System.out.println("File was null.");
-                }
-            }
-        }));
-    }
-
-
     private static void runQuery(String query) {
         List<String> colNames = new ArrayList<>();
         List<List<String>> results = DatabaseDAO.runQuery(query, colNames);
@@ -261,26 +233,6 @@ public class UIThread implements Runnable {
                 tableModel.addRow(row);
             }
             table.setTableModel(tableModel);
-        }
-    }
-
-    public static class CBListner implements ComboBox.Listener {
-
-        @Override
-        public void onSelectionChanged(int selectedIndex, int previousSelection, boolean changedByUserInteraction) {
-            String selected = comboBox.getSelectedItem();
-            if (selected != null && !selected.trim().isEmpty()) {
-                List<String> columnNames = DatabaseDAO.getColumnNames(selected);
-                List<List<String>> tableData = DatabaseDAO.getAllTableData(selected);
-                if (!tableData.isEmpty()) {
-                    TableModel<String> tableModel = new TableModel<>(columnNames);
-                    // List<String> lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
-                    for (List<String> row : tableData) {
-                        tableModel.addRow(row);
-                    }
-                    table.setTableModel(tableModel);
-                }
-            }
         }
     }
 
