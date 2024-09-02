@@ -59,6 +59,7 @@ public class GetPasscodeDialog extends DialogWindow {
                         System.exit(-1);
                     return;
                 }
+                Configuration.passcode = pCode;
                 close();
             }
         }));

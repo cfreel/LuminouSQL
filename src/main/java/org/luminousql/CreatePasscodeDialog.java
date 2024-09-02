@@ -45,6 +45,7 @@ public class CreatePasscodeDialog extends DialogWindow {
                     System.err.println(t.getMessage());
                     System.exit(-1);
                 }
+                Configuration.passcode = passcode.getText();
                 close();
             }
         }));

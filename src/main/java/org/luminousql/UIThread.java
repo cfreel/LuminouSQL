@@ -21,7 +21,7 @@ import java.util.List;
 
 public class UIThread implements Runnable {
     static List<String> tableNames = new ArrayList<>();
-    static Table<String> table;
+    static Table table;
     static MenuItem pullDataMenuItem;
 
     private static final String FAILED_PASSCODE_MSG = "Incorrect passcode";
@@ -56,7 +56,7 @@ public class UIThread implements Runnable {
                     new Separator(Direction.HORIZONTAL).setPreferredSize(new TerminalSize(width, 1)));
 
             TableModel<String> tableModel = new TableModel<>("");
-            table = new Table<>(tableModel);
+            table = new Table(tableModel.getColumnLabels().toArray(new String[]{}));
             table.setEscapeByArrowKey(false);
             table.setCellSelection(true);
 
@@ -78,6 +78,8 @@ public class UIThread implements Runnable {
             TerminalSize dialogSize = new TerminalSize(screen.getTerminalSize().getColumns()/2,
                     screen.getTerminalSize().getRows()/2);
 
+            Configuration.initConfig();
+
             if (!Configuration.passcodeExists()) {
                 // create passcode dialog
                 new CreatePasscodeDialogBuilder(dialogSize, textGUI).build().showDialog(textGUI);
@@ -85,6 +87,8 @@ public class UIThread implements Runnable {
                 // get & check passcode dialog
                 new GetPasscodeDialogBuilder(dialogSize, textGUI).buildDialog().showDialog(textGUI);
             }
+
+            Configuration.loadAliases();
 
             textGUI.addWindowAndWait(window);
         } catch (IOException e) {
@@ -228,7 +232,7 @@ public class UIThread implements Runnable {
 
     static void populateResults(List<List<String>> results, List<String> colNames) {
         if (!results.isEmpty()) {
-            TableModel<String> tableModel = new TableModel<>(colNames);
+            TableModel<String> tableModel = new TableModel(colNames.toArray(new String[]{}));
             for (List<String> row : results) {
                 tableModel.addRow(row);
             }

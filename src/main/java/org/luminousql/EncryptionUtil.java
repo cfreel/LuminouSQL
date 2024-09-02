@@ -13,6 +13,9 @@ import java.util.Base64;
 
 public class EncryptionUtil {
 
+    // The discussion here: https://stackoverflow.com/questions/992019/java-256-bit-aes-password-based-encryption
+    // is relevant; much of the code related to encryption was taken from the accepted answer based off similar needs.
+
     private static final String ALGO = "AES/CBC/PKCS5Padding";
     private static final int KEY_SIZE = 256;
 
@@ -48,4 +51,21 @@ public class EncryptionUtil {
         cipher.init(Cipher.DECRYPT_MODE, secret, new IvParameterSpec(iv));
         return new String(cipher.doFinal(ciphertext), StandardCharsets.UTF_8);
     }
+
+    public static String performEncryption(String plainText) throws Exception {
+        if (plainText==null || plainText.isEmpty())
+            return plainText;
+        SecretKey sk = getKey(Configuration.passcode, Configuration.getFixedPortionEncKey());
+        EncryptedStringBundle bundle = encrypt(sk, plainText);
+        return bundle.toString();
+    }
+
+    public static String performDecyption(String cipherText) throws Exception {
+        if (cipherText==null || cipherText.isEmpty())
+            return cipherText;
+        SecretKey sk = getKey(Configuration.passcode, Configuration.getFixedPortionEncKey());
+        EncryptedStringBundle bundle = new EncryptedStringBundle(cipherText);
+        return decrypt(sk, bundle);
+    }
+
 }

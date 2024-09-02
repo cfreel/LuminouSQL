@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 public class Configuration {
+    private static final String APP_NAME = "LuminouSQL";
+
     private static String configFilePath;
     private static final List<String> configFileText = new ArrayList<>(1000);
     private static final Map<String, String> configMap = new HashMap<>();
@@ -26,7 +28,17 @@ public class Configuration {
     static String currentQuery;
     static List<String> columns;
     static List<List<String>> queryResults;
-    static String fixedPortionEncKey;
+    static String passcode;
+
+    public static void initConfig() {
+        try {
+            String homeDir = System.getProperty("user.home");
+            Configuration.readConfig(homeDir + "/." + APP_NAME);
+        } catch (IOException e) {
+            Log.error(e);
+            System.exit(-1);
+        }
+    }
 
     public static void readConfig(String configFile) throws IOException {
         configFilePath = configFile;
@@ -57,7 +69,6 @@ public class Configuration {
             }
         }
         loadDrivers();
-        loadAliases();
     }
 
     public static boolean passcodeExists() {
@@ -201,7 +212,13 @@ public class Configuration {
         } else {
             setConfig("Aliases", aliasNames + "," + alias.name);
         }
-        addConfig(alias.name, alias.user+","+alias.pass+","+alias.driver+","+alias.connection);
+        String aliasEnc = "";
+        try {
+            aliasEnc = EncryptionUtil.performEncryption(alias.pass);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+        addConfig(alias.name, alias.user+","+aliasEnc+","+alias.driver+","+alias.connection);
         writeConfig();
     }
 
@@ -264,6 +281,10 @@ public class Configuration {
                 findFirst().
                 orElse(null);
         return configuredDriver;
+    }
+
+    static String getFixedPortionEncKey() {
+        return configMap.get(ENC_KEY_FIXED_PART);
     }
 
 }
