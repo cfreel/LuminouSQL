@@ -15,14 +15,13 @@ import com.googlecode.lanterna.gui2.table.TableModel;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class UIThread implements Runnable {
     static List<String> tableNames = new ArrayList<>();
-    static Table table;
+    static Table<String> table;
     static MenuItem pullDataMenuItem;
 
     private static final String FAILED_PASSCODE_MSG = "Incorrect passcode";
@@ -59,7 +58,7 @@ public class UIThread implements Runnable {
                     new Separator(Direction.HORIZONTAL).setPreferredSize(new TerminalSize(width, 1)));
 
             TableModel<String> tableModel = new TableModel<>("");
-            table = new Table(tableModel.getColumnLabels().toArray(new String[]{}));
+            table = new Table<>(tableModel.getColumnLabels().toArray(new String[]{}));
             table.setEscapeByArrowKey(false);
             table.setCellSelection(true);
 
@@ -209,14 +208,36 @@ public class UIThread implements Runnable {
         menuQuery.add(new MenuItem("Save Results", new Runnable() {
             @Override
             public void run() {
-                // just file dialog (or message if validation error)
-                FileDialog fd = new FileDialogBuilder().build();
-                File file = fd.showDialog(textGUI);
-                if (file != null) {
-                    // todo: write data to file
+                try {
+                    // just file dialog (or message if validation error)
+                    FileDialog fd = new FileDialogBuilder().build();
+                    File file = fd.showDialog(textGUI);
+                    if (file != null) {
+                        if (file.exists()) {
+                            MessageDialogButton[] buttons = new MessageDialogButton[]{MessageDialogButton.OK,
+                                    MessageDialogButton.Abort };
+                            MessageDialogButton overwriteBtn = MessageDialog.showMessageDialog(textGUI, "Confirm Overwrite",
+                                    "File exists, OK to overwrite?", buttons);
+                            if (overwriteBtn == MessageDialogButton.Abort)
+                                return;
+                        }
+                        try (FileWriter fw = new FileWriter(file);
+                             BufferedWriter bw = new BufferedWriter(fw)) {
 
+                            bw.write(String.join(",", table.getTableModel().getColumnLabels()));
+                            bw.newLine();
+                            for (List<String> row : table.getTableModel().getRows()) {
+                                bw.write(String.join(",", row));
+                                bw.newLine();
+                            }
+                            bw.flush();
+                        }
+                    } else {
+                        System.err.println("Failed to write query results to file.");
+                    }
+                } catch (Throwable t) {
+                    System.err.println("Failed to write query results to file.");
                 }
-
             }
         }));
 
