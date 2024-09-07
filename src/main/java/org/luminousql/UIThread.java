@@ -1,5 +1,6 @@
 package org.luminousql;
 
+import com.googlecode.lanterna.TerminalPosition;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.SimpleTheme;
@@ -36,7 +37,9 @@ public class UIThread implements Runnable {
             int width = screen.getTerminalSize().getColumns();
 
             final WindowBasedTextGUI textGUI =
-                    new MultiWindowTextGUI(screen, new DefaultWindowManager(), new EmptySpace(TextColor.ANSI.CYAN));
+                    new MultiWindowTextGUI(screen, new DefaultWindowManager(),
+                            new EmptySpace(new TextColor.RGB(20,20,20)));
+            textGUI.setTheme(getTheme());
             final Window window = new BasicWindow();
 
             List<Window.Hint> hints = new ArrayList<>();
@@ -82,10 +85,16 @@ public class UIThread implements Runnable {
 
             if (!Configuration.passcodeExists()) {
                 // create passcode dialog
-                new CreatePasscodeDialogBuilder(dialogSize, textGUI).build().showDialog(textGUI);
+                CreatePasscodeDialog cpd = new CreatePasscodeDialogBuilder(dialogSize, textGUI).build();
+                cpd.setTheme(theme);
+                cpd.setPosition(new TerminalPosition(10,10));
+                cpd.showDialog(textGUI);
             } else {
                 // get & check passcode dialog
-                new GetPasscodeDialogBuilder(dialogSize, textGUI).buildDialog().showDialog(textGUI);
+                GetPasscodeDialog gpd = new GetPasscodeDialogBuilder(dialogSize, textGUI).buildDialog();
+                gpd.setTheme(theme);
+                gpd.setPosition(new TerminalPosition(10,10));
+                gpd.showDialog(textGUI);
             }
 
             Configuration.loadAliases();
@@ -107,7 +116,7 @@ public class UIThread implements Runnable {
 
     private static void addMenuToPanel(Panel panel, WindowBasedTextGUI textGUI, Screen screen) {
         MenuBar menubar = new MenuBar();
-
+        Theme theme = getTheme();
         // "File" menu
         Menu fileMenu = new Menu("File");
         menubar.add(fileMenu);
@@ -130,33 +139,38 @@ public class UIThread implements Runnable {
         Menu menuDB = new Menu("DB");
         menubar.add(menuDB);
 
-        menuDB.add(new MenuItem("Drivers", new Runnable() {
+        MenuItem drivers = new MenuItem("Drivers", new Runnable() {
             @Override
             public void run() {
                 TerminalSize parentSize = screen.getTerminalSize();
                 TerminalSize size = new TerminalSize(parentSize.getColumns()-8,
                         parentSize.getRows()-8);
-                new DriverDialogBuilder(size, textGUI).build().showDialog(textGUI);
+                DriverDialog dd = new DriverDialogBuilder(size, textGUI).build();
+                dd.showDialog(textGUI);
             }
-        }));
+        });
+        menuDB.add(drivers);
 
-        menuDB.add(new MenuItem("Aliases", new Runnable() {
+        MenuItem aliases = new MenuItem("Aliases", new Runnable() {
             @Override
             public void run() {
                 TerminalSize parentSize = screen.getTerminalSize();
                 TerminalSize size = new TerminalSize(parentSize.getColumns()-8,
                         parentSize.getRows()-6);
-                new AliasDialogBuilder(size, textGUI).build().showDialog(textGUI);
+                AliasDialog ad = new AliasDialogBuilder(size, textGUI).build();
+                ad.showDialog(textGUI);
             }
-        }));
+        });
+        menuDB.add(aliases);
 
-        menuDB.add(new MenuItem("Load Tables", new Runnable() {
+        MenuItem loadTables = new MenuItem("Load Tables", new Runnable() {
             @Override
             public void run() {
                 tableNames = DatabaseDAO.getAllTableNames();
                 pullDataMenuItem.setEnabled(true);
             }
-        }));
+        });
+        menuDB.add(loadTables);
 
         pullDataMenuItem = new MenuItem("Pull Data for Table...", new Runnable() {
             @Override
@@ -187,7 +201,8 @@ public class UIThread implements Runnable {
                 TerminalSize parentSize = screen.getTerminalSize();
                 TerminalSize size = new TerminalSize(parentSize.getColumns()-8,
                         parentSize.getRows()-6);
-                new QueryDialogBuilder(size, textGUI).build().showDialog(textGUI);
+                QueryDialog qd = new QueryDialogBuilder(size, textGUI).build();
+                qd.showDialog(textGUI);
             }
         }));
 
@@ -195,7 +210,8 @@ public class UIThread implements Runnable {
             @Override
             public void run() {
                 // just file dialog (or message if validation error)
-                File file = new FileDialogBuilder().build().showDialog(textGUI);
+                FileDialog fd = new FileDialogBuilder().build();
+                File file = fd.showDialog(textGUI);
                 if (file != null) {
                     // todo: write data to file
 
@@ -210,7 +226,7 @@ public class UIThread implements Runnable {
         menuHelp.add(new MenuItem("Homepage", new Runnable() {
             public void run() {
                 MessageDialog.showMessageDialog(
-                        textGUI, "Homepage", "https://github.com/mabe02/lanterna", MessageDialogButton.OK);
+                        textGUI, "Homepage", "https://github.com/cfreel/LuminouSQL", MessageDialogButton.OK);
             }
         }));
         menuHelp.add(new MenuItem("About", new Runnable() {
@@ -241,9 +257,14 @@ public class UIThread implements Runnable {
     }
 
     public static Theme getTheme() {
-        Theme myTheme = SimpleTheme.makeTheme(true, TextColor.ANSI.WHITE,
-                TextColor.ANSI.BLACK, TextColor.ANSI.BLUE_BRIGHT, new TextColor.RGB(20,20,20),
+        TextColor text = TextColor.ANSI.WHITE;
+        TextColor background = TextColor.ANSI.BLACK;
+        TextColor textColorCurField = new TextColor.RGB(120, 120, 255);
+
+        Theme myTheme = SimpleTheme.makeTheme(true, text,
+                background, textColorCurField, new TextColor.RGB(30,30,30),
                 new TextColor.RGB(190,190,190), new TextColor.RGB(10,10,10),TextColor.ANSI.BLACK);
         return myTheme;
     }
+
 }

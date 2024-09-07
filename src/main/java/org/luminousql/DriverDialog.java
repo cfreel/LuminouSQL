@@ -2,6 +2,7 @@ package org.luminousql;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.gui2.dialogs.DialogWindow;
+import com.googlecode.lanterna.gui2.dialogs.FileDialog;
 import com.googlecode.lanterna.gui2.dialogs.FileDialogBuilder;
 
 import java.io.File;
@@ -16,12 +17,13 @@ public class DriverDialog extends DialogWindow {
     protected DriverDialog(TerminalSize dialogSize, WindowBasedTextGUI textGUI) {
         super("Drivers");
 
+        DriverDialog dd = this;
         Panel contentPanel = new Panel();
         contentPanel.setLayoutManager(new LinearLayout(Direction.VERTICAL));
 
         contentPanel.addComponent(new Label("Existing Drivers:"));
-
-        driversListBox = new ActionListBox(new TerminalSize(50, 6));
+        contentPanel.addComponent(new Separator(Direction.HORIZONTAL));
+        driversListBox = new ActionListBox(new TerminalSize(50, 5));
         Configuration.configuredDrivers.forEach(e -> {
             driversListBox.addItem(e.name, new Runnable() {
                 @Override
@@ -56,6 +58,8 @@ public class DriverDialog extends DialogWindow {
         selectFilePanel.addComponent(new Button("Select File", new Runnable() {
             @Override
             public void run() {
+                FileDialog fd = new FileDialogBuilder().build();
+                fd.setTheme(dd.getTheme());
                 File file = new FileDialogBuilder().build().showDialog(textGUI);
                 if (file != null) {
                     curDriverPathField.setText(file.getAbsolutePath());

@@ -19,6 +19,7 @@ public class AliasDialog extends DialogWindow {
         contentPanel.setLayoutManager(new LinearLayout(Direction.VERTICAL));
 
         contentPanel.addComponent(new Label("Existing Aliases:"));
+        contentPanel.addComponent(new EmptySpace());
 
         aliasesListBox = new ActionListBox(new TerminalSize(50, 5));
         Configuration.aliases.forEach(e -> {

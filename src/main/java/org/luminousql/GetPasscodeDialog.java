@@ -17,6 +17,7 @@ public class GetPasscodeDialog extends DialogWindow {
         Panel contentPanel = new Panel();
         contentPanel.setLayoutManager(new LinearLayout(Direction.VERTICAL));
 
+        contentPanel.addComponent(new EmptySpace());
         contentPanel.addComponent(new Label("Enter passcode:"));
         passcode = new TextBox(new TerminalSize(16, 1));
         passcode.setMask('*');
