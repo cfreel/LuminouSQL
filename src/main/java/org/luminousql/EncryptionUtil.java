@@ -44,7 +44,9 @@ public class EncryptionUtil {
         return new EncryptedStringBundle(ciphertext, iv);
     }
 
-    public static String decrypt(SecretKey secret, EncryptedStringBundle bundle) throws NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException, InvalidKeyException {
+    public static String decrypt(SecretKey secret, EncryptedStringBundle bundle)
+            throws NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException,
+            InvalidAlgorithmParameterException, InvalidKeyException {
         byte[] ciphertext = Base64.getDecoder().decode(bundle.encryptedString);
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         byte[] iv = Base64.getDecoder().decode(bundle.iv);

@@ -80,23 +80,7 @@ public class UIThread implements Runnable {
             TerminalSize dialogSize = new TerminalSize(screen.getTerminalSize().getColumns()/2,
                     screen.getTerminalSize().getRows()/2);
 
-            Configuration.initConfig();
-
-            if (!Configuration.passcodeExists()) {
-                // create passcode dialog
-                CreatePasscodeDialog cpd = new CreatePasscodeDialogBuilder(dialogSize, textGUI).build();
-                cpd.setTheme(theme);
-                cpd.setPosition(new TerminalPosition(10,10));
-                cpd.showDialog(textGUI);
-            } else {
-                // get & check passcode dialog
-                GetPasscodeDialog gpd = new GetPasscodeDialogBuilder(dialogSize, textGUI).buildDialog();
-                gpd.setTheme(theme);
-                gpd.setPosition(new TerminalPosition(10,10));
-                gpd.showDialog(textGUI);
-            }
-
-            Configuration.loadAliases();
+            initConfig(dialogSize, textGUI, theme);
 
             textGUI.addWindowAndWait(window);
         } catch (IOException e) {
@@ -111,6 +95,26 @@ public class UIThread implements Runnable {
             }
         }
 
+    }
+
+    private static void initConfig(TerminalSize dialogSize, WindowBasedTextGUI textGUI, Theme theme) {
+        Configuration.initConfig();
+
+        if (!Configuration.passcodeExists()) {
+            // create passcode dialog
+            CreatePasscodeDialog cpd = new CreatePasscodeDialogBuilder(dialogSize, textGUI).build();
+            cpd.setTheme(theme);
+            cpd.setPosition(new TerminalPosition(10,10));
+            cpd.showDialog(textGUI);
+        } else {
+            // get & check passcode dialog
+            GetPasscodeDialog gpd = new GetPasscodeDialogBuilder(dialogSize, textGUI).buildDialog();
+            gpd.setTheme(theme);
+            gpd.setPosition(new TerminalPosition(10,10));
+            gpd.showDialog(textGUI);
+        }
+
+        Configuration.loadAliases();
     }
 
     private static void addMenuToPanel(Panel panel, WindowBasedTextGUI textGUI, Screen screen) {
