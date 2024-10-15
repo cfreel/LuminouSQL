@@ -13,7 +13,7 @@ public class AliasDialog extends DialogWindow {
     ActionListBox aliasesListBox;
 
     protected AliasDialog(TerminalSize dialogSize, WindowBasedTextGUI textGUI) {
-        super("Aliass");
+        super("Aliases");
 
         Panel contentPanel = new Panel();
         contentPanel.setLayoutManager(new LinearLayout(Direction.VERTICAL));

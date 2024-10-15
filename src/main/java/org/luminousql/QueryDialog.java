@@ -40,7 +40,7 @@ public class QueryDialog extends DialogWindow {
                 Configuration.columns = new ArrayList<>();
                 Configuration.queryResults = DatabaseDAO.runQuery(query.getText(), Configuration.columns,
                         aliases.getText());
-                UIThread.populateResults(Configuration.queryResults, Configuration.columns);
+                UIHelper.populateResults(UIThread.table, Configuration.queryResults, Configuration.columns);
                 close();
             }
         }));

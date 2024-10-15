@@ -11,12 +11,16 @@ public class DatabaseDAO {
     static String user = "";
     static String password = "";
 
-    public static List<String> getAllTableNames() {
-        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+    public static List<String> getAllTableNames(String aliasName) {
+        Alias alias = Configuration.getAliasFromName(aliasName);
+        ConfiguredDriver configuredDriver = Configuration.getConfiguredDriverFromAlias(alias);
+        try (Connection connection = DriverShim.getConnection(configuredDriver, alias)) {
             return getTableNames(connection);
-        } catch (SQLException e) {
-            System.err.println("Error connecting to database: " + e.getMessage());
+        } catch (Exception e) {
+            // todo: write directly to a log file so as not to interfere with the TUI
+            //System.err.println("Error connecting to database: " + e.getMessage());
         }
+
         return new ArrayList<>();
     }
 
@@ -99,6 +103,27 @@ public class DatabaseDAO {
             }
         }
         return tableData;
+    }
+
+    public static List<List<String>> getTableMetadata(String aliasName, String table) {
+        Alias alias = Configuration.getAliasFromName(aliasName);
+        ConfiguredDriver configuredDriver = Configuration.getConfiguredDriverFromAlias(alias);
+        List<List<String>> tableMetadata = new ArrayList<>();
+        try (Connection connection = DriverShim.getConnection(configuredDriver, alias)) {
+            DatabaseMetaData metaData = connection.getMetaData();
+            ResultSet columns = metaData.getColumns(null, null, table, "%");
+            while (columns.next()) {
+                List<String> colData = new ArrayList<>();
+                colData.add(columns.getString("COLUMN_NAME"));
+                colData.add(columns.getString("TYPE_NAME"));
+                colData.add(columns.getString("COLUMN_SIZE"));
+                tableMetadata.add(colData);
+            }
+        } catch (Exception e) {
+            // todo: write directly to a log file so as not to interfere with the TUI
+            //System.err.println("Error connecting to database: " + e.getMessage());
+        }
+        return tableMetadata;
     }
 
     // Fetch data from a specific table

@@ -166,35 +166,17 @@ public class UIThread implements Runnable {
         });
         menuDB.add(aliases);
 
-        MenuItem loadTables = new MenuItem("Load Tables", new Runnable() {
+        MenuItem loadTables = new MenuItem("Explore Table Structure...", new Runnable() {
             @Override
             public void run() {
-                tableNames = DatabaseDAO.getAllTableNames();
-                pullDataMenuItem.setEnabled(true);
+                TerminalSize parentSize = screen.getTerminalSize();
+                TerminalSize size = new TerminalSize(parentSize.getColumns()-8,
+                        parentSize.getRows()-6);
+                TablesDialog td = new TablesDialogBuilder(size, textGUI).build();
+                td.showDialog(textGUI);
             }
         });
         menuDB.add(loadTables);
-
-        pullDataMenuItem = new MenuItem("Pull Data for Table...", new Runnable() {
-            @Override
-            public void run() {
-                ActionListDialogBuilder aldb = new ActionListDialogBuilder()
-                        .setTitle("Available Tables")
-                        .setDescription("Choose a Table to View...");
-
-                for (String name : tableNames) {
-                    aldb = aldb.addAction(name, new Runnable() {
-                        @Override
-                        public void run() {
-                            runQuery("select * from " + name);
-                        }
-                    });
-                }
-                aldb.build().showDialog(textGUI);
-            }
-        });
-        pullDataMenuItem.setEnabled(false);
-        menuDB.add(pullDataMenuItem);
 
         Menu menuQuery = new Menu("Queries");
         menubar.add(menuQuery);
@@ -268,17 +250,7 @@ public class UIThread implements Runnable {
         List<String> colNames = new ArrayList<>();
         List<List<String>> results = DatabaseDAO.runQuery(query, colNames);
 
-        populateResults(results, colNames);
-    }
-
-    static void populateResults(List<List<String>> results, List<String> colNames) {
-        if (!results.isEmpty()) {
-            TableModel<String> tableModel = new TableModel(colNames.toArray(new String[]{}));
-            for (List<String> row : results) {
-                tableModel.addRow(row);
-            }
-            table.setTableModel(tableModel);
-        }
+        UIHelper.populateResults(table, results, colNames);
     }
 
     public static Theme getTheme() {
