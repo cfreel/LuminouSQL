@@ -22,7 +22,7 @@ dependencies {
 }
 
 group = 'org.luminousql'
-version = '1.0-SNAPSHOT'
+version = '0.5'
 description = 'LuminouSQL'
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
